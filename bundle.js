@@ -16955,7 +16955,7 @@ var data = __webpack_require__(2);
   var graphWidth = totalWidth - margin.right - margin.left;
   var graphHeight = totalHeight - margin.top - margin.bottom;
 
-  var svg = d3.select('figure').append('svg').attr('width', totalWidth).attr('height', totalHeight).style('border', '1px solid black');
+  var svg = d3.select('figure').append('svg').attr('width', totalWidth).attr('height', totalHeight).style('border', '1px solid black').style('background-color', '#B7B792');
 
   var g = svg.append('g').attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -16967,28 +16967,35 @@ var data = __webpack_require__(2);
   var askPrice = function askPrice(d) {
     return d.ask / 10000;
   };
+  var bidPrice = function bidPrice(d) {
+    return d.bid / 10000;
+  };
 
-  console.log(parseTime('09:30:00.000'));
   var x = d3.scaleTime().domain([d3.extent(data.bboList, time)]).range([0, graphWidth]);
 
   var y = d3.scaleLinear().domain([d3.extent(data.bboList, askPrice)]).range([graphHeight, 0]);
 
-  var area = d3.area().x(function (d) {
+  var askArea = d3.area().x(function (d) {
     return x(time(d));
   }).y1(function (d) {
     return y(askPrice(d));
-  }).y0(y(0));
+  }).y0(0);
 
-  var line = d3.line().x(function (d) {
+  var bidArea = d3.area().x(function (d) {
     return x(time(d));
-  }).y(function (d) {
-    return y(askPrice(d));
-  }).curve(d3.curveStepAfter());
+  }).y1(function (d) {
+    return y(bidPrice(d));
+  }).y0(graphHeight);
+
+  var askLine = askArea.curve(d3.curveStepAfter);
+  var bidLine = bidArea.curve(d3.curveStepAfter);
 
   x.domain(d3.extent(data.bboList, time));
   y.domain([d3.min(data.bboList, askPrice) - 0.4, d3.max(data.bboList, askPrice)]);
 
-  g.append('path').data(data).attr('fill', 'steelblue').attr('d', area);
+  g.append('path').data([data.bboList]).attr('fill', '#9A5E20').attr('d', askLine);
+
+  g.append('path').data([data.bboList]).attr('fill', '#467349').attr('d', bidLine);
 
   g.append("g").attr("transform", "translate(0," + graphHeight + ")").call(d3.axisBottom(x));
 

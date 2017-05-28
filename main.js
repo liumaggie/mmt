@@ -11,7 +11,8 @@ const data = require('./stock.json');
   const svg = d3.select('figure').append('svg')
     .attr('width', totalWidth)
     .attr('height', totalHeight)
-    .style('border', '1px solid black');
+    .style('border', '1px solid black')
+    .style('background-color', '#B7B792');
 
   const g = svg.append('g')
     .attr("transform",
@@ -21,8 +22,8 @@ const data = require('./stock.json');
 
   const time = (d) => parseTime(d.timeStr);
   const askPrice = (d) => d.ask/10000;
+  const bidPrice = (d) => d.bid/10000;
 
-  console.log(parseTime('09:30:00.000'));
   const x = d3.scaleTime()
                    .domain([d3.extent(data.bboList, time)])
                    .range([0, graphWidth]);
@@ -31,23 +32,31 @@ const data = require('./stock.json');
                     .domain([d3.extent(data.bboList, askPrice)])
                     .range([graphHeight, 0]);
 
-  const area = d3.area()
+  const askArea = d3.area()
                  .x((d) => x(time(d)))
                  .y1((d) => y(askPrice(d)))
-                 .y0(y(0));
+                 .y0(0);
 
-  const line = d3.line()
-                 .x((d) => x(time(d)))
-                 .y((d) => y(askPrice(d)))
-                 .curve(d3.curveStepAfter());
+  const bidArea = d3.area()
+                  .x((d) => x(time(d)))
+                  .y1((d) => y(bidPrice(d)))
+                  .y0(graphHeight);
+
+  const askLine = askArea.curve(d3.curveStepAfter);
+  const bidLine = bidArea.curve(d3.curveStepAfter);
 
   x.domain(d3.extent(data.bboList, time));
   y.domain([d3.min(data.bboList, askPrice) - 0.4, d3.max(data.bboList, askPrice)]);
 
   g.append('path')
-    .data(data)
-    .attr('fill', 'steelblue')
-    .attr('d', area);
+    .data([data.bboList])
+    .attr('fill', '#9A5E20')
+    .attr('d', askLine);
+
+  g.append('path')
+    .data([data.bboList])
+    .attr('fill', '#467349')
+    .attr('d', bidLine);
 
   g.append("g")
       .attr("transform", "translate(0," + graphHeight + ")")
