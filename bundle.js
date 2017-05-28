@@ -16959,19 +16959,19 @@ var data = __webpack_require__(2);
 
   var g = svg.append('g').attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  var timeFormat = d3.timeFormat('%H:%M:%S');
+  var parseTime = d3.timeParse('%H:%M:%S.%L');
 
   var time = function time(d) {
-    return d.timeStr;
+    return parseTime(d.timeStr);
   };
   var askPrice = function askPrice(d) {
-    return d.bboList.ask;
+    return d.ask / 10000;
   };
 
-  // console.log(d3.timeParse(data.bboList[0].timeStr));
-  var x = d3.scaleTime().domain([d3.extent(data, time)]).range([0, graphWidth]);
+  console.log(parseTime('09:30:00.000'));
+  var x = d3.scaleTime().domain([d3.extent(data.bboList, time)]).range([0, graphWidth]);
 
-  var y = d3.scaleLinear().domain([d3.extent(data, askPrice)]).range([graphHeight, 0]);
+  var y = d3.scaleLinear().domain([d3.extent(data.bboList, askPrice)]).range([graphHeight, 0]);
 
   var area = d3.area().x(function (d) {
     return x(time(d));
@@ -16979,11 +16979,20 @@ var data = __webpack_require__(2);
     return y(askPrice(d));
   }).y0(y(0));
 
-  g.append('path').datum(data).attr('fill', 'steelblue').attr('d', area);
+  var line = d3.line().x(function (d) {
+    return x(time(d));
+  }).y(function (d) {
+    return y(askPrice(d));
+  }).curve(d3.curveStepAfter());
+
+  x.domain(d3.extent(data.bboList, time));
+  y.domain([d3.min(data.bboList, askPrice) - 0.4, d3.max(data.bboList, askPrice)]);
+
+  g.append('path').data(data).attr('fill', 'steelblue').attr('d', area);
 
   g.append("g").attr("transform", "translate(0," + graphHeight + ")").call(d3.axisBottom(x));
 
-  g.append("g").call(d3.axisLeft(y)).append("text").attr("fill", "#000").attr("transform", "rotate(-90)").attr("y", 6).attr("dy", "0.71em").attr("text-anchor", "end").text("Price ($)");
+  g.append("g").call(d3.axisLeft(y)).append("text").attr("fill", "black").attr("transform", "rotate(-90)").attr("y", 6).attr("dy", "0.71em").attr("text-anchor", "end").text("Price ($)");
 })();
 
 /***/ }),
