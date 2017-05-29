@@ -1,5 +1,6 @@
 const d3 = require('d3');
 const data = require('./stock.json');
+const TradeList = require('./tradelist');
 
 (() => {
   const totalWidth = 1180;
@@ -15,8 +16,7 @@ const data = require('./stock.json');
     .style('background-color', '#B7B792');
 
   const g = svg.append('g')
-    .attr("transform",
-          "translate(" + margin.left + "," + margin.top + ")");
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
   const parseTime = d3.timeParse('%H:%M:%S.%L');
 
@@ -59,7 +59,7 @@ const data = require('./stock.json');
     .attr('d', bidLine);
 
   g.append("g")
-      .attr("transform", "translate(0," + graphHeight + ")")
+      .attr("transform", `translate(0, ${graphHeight})`)
       .call(d3.axisBottom(x));
 
   g.append("g")
@@ -71,4 +71,6 @@ const data = require('./stock.json');
       .attr("dy", "0.71em")
       .attr("text-anchor", "end")
       .text("Price ($)");
+
+  TradeList.createTradeCircles(g, data, x, y);
 })();

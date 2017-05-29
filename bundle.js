@@ -16947,6 +16947,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 var d3 = __webpack_require__(0);
 var data = __webpack_require__(2);
+var TradeList = __webpack_require__(3);
 
 (function () {
   var totalWidth = 1180;
@@ -16957,7 +16958,7 @@ var data = __webpack_require__(2);
 
   var svg = d3.select('figure').append('svg').attr('width', totalWidth).attr('height', totalHeight).style('border', '1px solid black').style('background-color', '#B7B792');
 
-  var g = svg.append('g').attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  var g = svg.append('g').attr("transform", 'translate(' + margin.left + ', ' + margin.top + ')');
 
   var parseTime = d3.timeParse('%H:%M:%S.%L');
 
@@ -16997,9 +16998,11 @@ var data = __webpack_require__(2);
 
   g.append('path').data([data.bboList]).attr('fill', '#467349').attr('d', bidLine);
 
-  g.append("g").attr("transform", "translate(0," + graphHeight + ")").call(d3.axisBottom(x));
+  g.append("g").attr("transform", 'translate(0, ' + graphHeight + ')').call(d3.axisBottom(x));
 
   g.append("g").call(d3.axisLeft(y)).append("text").attr("fill", "black").attr("transform", "rotate(-90)").attr("y", 6).attr("dy", "0.71em").attr("text-anchor", "end").text("Price ($)");
+
+  TradeList.createTradeCircles(g, data, x, y);
 })();
 
 /***/ }),
@@ -32292,6 +32295,40 @@ module.exports = {
 			"orderReferenceNumber": 236854905
 		}
 	]
+};
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var d3 = __webpack_require__(0);
+
+var convertTime = function convertTime(nano) {
+  var totalSeconds = nano / Math.pow(10, 9);
+  var hours = Math.floor(totalSeconds / 3600);
+  var minutes = Math.floor(totalSeconds % 3600 / 60);
+  var seconds = Math.floor(totalSeconds % 3600 % 60 * 1000) / 1000;
+  return hours + ':' + minutes + ':' + seconds;
+};
+
+exports.createTradeCircles = function (g, data, x, y) {
+  var parseTime = d3.timeParse('%H:%M:%S.%L');
+
+  var time = function time(d) {
+    return parseTime(convertTime(d.time));
+  };
+  var price = function price(d) {
+    return d.price / 10000;
+  };
+
+  g.selectAll('circle').data(data.tradeList).enter().append('circle').attr('r', 2).attr('cx', function (d) {
+    return x(time(d));
+  }).attr('cy', function (d) {
+    return y(price(d));
+  });
 };
 
 /***/ })
