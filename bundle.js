@@ -32328,6 +32328,8 @@ exports.createTradeCircles = function (g, data, x, y) {
     return x(time(d));
   }).attr('cy', function (d) {
     return y(price(d));
+  }).style('fill', function (d) {
+    return d.tradeType === 'P' ? '#CB5D6B' : '#000';
   });
 };
 

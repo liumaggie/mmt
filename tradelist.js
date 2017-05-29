@@ -20,5 +20,6 @@ exports.createTradeCircles = (g, data, x, y) => {
     .append('circle')
     .attr('r', 2)
     .attr('cx', (d) => x(time(d)))
-    .attr('cy', (d) => y(price(d)));
+    .attr('cy', (d) => y(price(d)))
+    .style('fill', (d) => d.tradeType === 'P' ? '#CB5D6B' : '#000');
 };
