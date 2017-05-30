@@ -16976,33 +16976,84 @@ var TradeList = __webpack_require__(3);
 
   var y = d3.scaleLinear().domain([d3.extent(data.bboList, askPrice)]).range([graphHeight, 0]);
 
-  var askArea = d3.area().x(function (d) {
+  var xAxis = d3.axisBottom(x);
+  var yAxis = d3.axisLeft(y);
+
+  var askArea = d3.area().curve(d3.curveStepAfter).x(function (d) {
     return x(time(d));
   }).y1(function (d) {
     return y(askPrice(d));
   }).y0(0);
 
-  var bidArea = d3.area().x(function (d) {
-    return x(time(d));
-  }).y1(function (d) {
+  var bidArea = d3.area().curve(d3.curveStepAfter)
+  // .x((d) => x(time(d)))
+  .y1(function (d) {
     return y(bidPrice(d));
   }).y0(graphHeight);
-
-  var askLine = askArea.curve(d3.curveStepAfter);
-  var bidLine = bidArea.curve(d3.curveStepAfter);
 
   x.domain(d3.extent(data.bboList, time));
   y.domain([d3.min(data.bboList, askPrice) - 0.4, d3.max(data.bboList, askPrice)]);
 
-  g.append('path').data([data.bboList]).attr('fill', '#9A5E20').attr('d', askLine);
+  var askAreaPath = g.append('path')
+  // .data([data.bboList])
+  .attr('fill', '#9A5E20').attr('clip-path', 'url(#clip)');
+  // .attr('d', askArea);
 
-  g.append('path').data([data.bboList]).attr('fill', '#467349').attr('d', bidLine);
+  var bidAreaPath = g.append('path')
+  // .data([data.bboList])
+  .attr('fill', '#467349').attr('clip-path', 'url(#clip)');
+  // .attr('d', bidArea);
 
-  g.append("g").attr("transform", 'translate(0, ' + graphHeight + ')').call(d3.axisBottom(x));
+  var xGroup = g.append("g").attr("transform", 'translate(0, ' + graphHeight + ')').attr('class', 'x-axis');
 
-  g.append("g").call(d3.axisLeft(y)).append("text").attr("fill", "black").attr("transform", "rotate(-90)").attr("y", 6).attr("dy", "0.71em").attr("text-anchor", "end").text("Price ($)");
+  var yGroup = g.append("g").attr('class', 'y-axis');
+  // .call(yAxis)
+  // .append("text")
+  //   .attr("fill", "black")
+  //   .attr("transform", "rotate(-90)")
+  //   .attr("y", 6)
+  //   .attr("dy", "0.71em")
+  //   .attr("text-anchor", "end")
+  //   .text("Price ($)");
 
-  TradeList.createTradeCircles(g, data, x, y);
+  // TradeList.createTradeCircles(g, data, x, y);
+
+  var zoom = d3.zoom().extent([[0, 0], [graphWidth, graphHeight]]).scaleExtent([1, 8]).translateExtent([[0, 0], [graphWidth, graphHeight]]).on('zoom', zoomed);
+
+  var view = svg.append("rect").attr("width", graphWidth).attr("height", graphHeight).attr("fill", "none").attr("pointer-events", "all").call(zoom);
+
+  g.append("clipPath").attr("id", "clip").append("rect").attr("width", graphWidth).attr("height", graphHeight);
+
+  // const xExtent = d3.extent(data.bboList, time);
+  // const yExtent = d3.extent(data.bboList, askPrice);
+  // zoom.translateExtent([[x(xExtent[0]), -Infinity], [x(xExtent[1]), Infinity]])
+
+  // y.domain([d3.min(data.bboList, askPrice) - 0.4, d3.max(data.bboList, askPrice)]);
+  // yGroup.call(yAxis).select(".domain").remove();
+  askAreaPath.datum(data.bboList);
+  bidAreaPath.datum(data.bboList);
+  view.call(zoom.transform, d3.zoomIdentity);
+
+  function zoomed() {
+    // view.attr('transform', d3.event.transform);
+    var rescaleX = d3.event.transform.rescaleX(x);
+    var rescaleY = d3.event.transform.rescaleY(y);
+    xGroup.call(xAxis.scale(rescaleX));
+    yGroup.call(yAxis.scale(rescaleY));
+    askAreaPath.attr("d", askArea.x(function (d) {
+      return rescaleX(time(d));
+    }));
+
+    askAreaPath.attr('d', askArea.y1(function (d) {
+      return rescaleY(askPrice(d));
+    }));
+    bidAreaPath.attr("d", bidArea.x(function (d) {
+      return rescaleX(time(d));
+    }));
+    bidAreaPath.attr('d', bidArea.y1(function (d) {
+      return rescaleY(bidPrice(d));
+    }));
+  }
 })();
 
 /***/ }),
