@@ -16985,9 +16985,9 @@ var TradeList = __webpack_require__(3);
     return y(askPrice(d));
   }).y0(0);
 
-  var bidArea = d3.area().curve(d3.curveStepAfter)
-  // .x((d) => x(time(d)))
-  .y1(function (d) {
+  var bidArea = d3.area().curve(d3.curveStepAfter).x(function (d) {
+    return x(time(d));
+  }).y1(function (d) {
     return y(bidPrice(d));
   }).y0(graphHeight);
 
@@ -17009,9 +17009,6 @@ var TradeList = __webpack_require__(3);
   g.append("clipPath").attr("id", "clip").append("rect").attr("width", graphWidth).attr("height", graphHeight);
 
   TradeList.createTradeCircles(g, data, x, y);
-  // const xExtent = d3.extent(data.bboList, time);
-  // const yExtent = d3.extent(data.bboList, askPrice);
-  // zoom.translateExtent([[x(xExtent[0]), -Infinity], [x(xExtent[1]), Infinity]])
 
   askAreaPath.datum(data.bboList);
   bidAreaPath.datum(data.bboList);
@@ -32359,7 +32356,7 @@ var price = function price(d) {
 
 exports.createTradeCircles = function (g, data, x, y) {
 
-  g.selectAll('circle').data(data.tradeList).enter().append('circle').attr('r', 2).attr('cx', function (d) {
+  g.selectAll('circle').data(data.tradeList).enter().append('circle').attr('class', 'dot').attr('r', 2).attr('cx', function (d) {
     return x(time(d));
   }).attr('cy', function (d) {
     return y(price(d));
@@ -32369,7 +32366,7 @@ exports.createTradeCircles = function (g, data, x, y) {
 };
 
 exports.rescaleCircles = function (g, x, y) {
-  g.selectAll('circle').attr('cx', function (d) {
+  g.selectAll('circle').attr('clip-path', 'url(#clip)').attr('cx', function (d) {
     return x(time(d));
   }).attr('cy', function (d) {
     return y(price(d));

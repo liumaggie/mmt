@@ -18,6 +18,7 @@ exports.createTradeCircles = (g, data, x, y) => {
     .data(data.tradeList)
     .enter()
     .append('circle')
+    .attr('class', 'dot')
     .attr('r', 2)
     .attr('cx', (d) => x(time(d)))
     .attr('cy', (d) => y(price(d)))
@@ -26,6 +27,7 @@ exports.createTradeCircles = (g, data, x, y) => {
 
 exports.rescaleCircles = (g, x, y) => {
   g.selectAll('circle')
+  .attr('clip-path', 'url(#clip)')
   .attr('cx', (d) => x(time(d)))
   .attr('cy', (d) => y(price(d)));
 };

@@ -43,7 +43,7 @@ const TradeList = require('./tradelist');
 
   const bidArea = d3.area()
                   .curve(d3.curveStepAfter)
-                  // .x((d) => x(time(d)))
+                  .x((d) => x(time(d)))
                   .y1((d) => y(bidPrice(d)))
                   .y0(graphHeight);
 
@@ -65,7 +65,6 @@ const TradeList = require('./tradelist');
   const yGroup = g.append("g")
     .attr('class', 'y-axis');
 
-
   const zoom = d3.zoom()
   .extent([[0, 0], [graphWidth, graphHeight]])
   .scaleExtent([1, 8])
@@ -86,9 +85,6 @@ const TradeList = require('./tradelist');
       .attr("height", graphHeight);
 
   TradeList.createTradeCircles(g, data, x, y);
-  // const xExtent = d3.extent(data.bboList, time);
-  // const yExtent = d3.extent(data.bboList, askPrice);
-  // zoom.translateExtent([[x(xExtent[0]), -Infinity], [x(xExtent[1]), Infinity]])
 
   askAreaPath.datum(data.bboList);
   bidAreaPath.datum(data.bboList);
