@@ -8,11 +8,11 @@ const convertTime = (nano) => {
   return `${hours}:${minutes}:${seconds}`;
 };
 
-exports.createTradeCircles = (g, data, x, y) => {
-  const parseTime = d3.timeParse('%H:%M:%S.%L');
+const parseTime = d3.timeParse('%H:%M:%S.%L');
+let time = (d) => parseTime(convertTime(d.time));
+let price = (d) => d.price/10000;
 
-  const time = (d) => parseTime(convertTime(d.time));
-  const price = (d) => d.price/10000;
+exports.createTradeCircles = (g, data, x, y) => {
 
   g.selectAll('circle')
     .data(data.tradeList)
@@ -22,4 +22,10 @@ exports.createTradeCircles = (g, data, x, y) => {
     .attr('cx', (d) => x(time(d)))
     .attr('cy', (d) => y(price(d)))
     .style('fill', (d) => d.tradeType === 'P' ? '#CB5D6B' : '#000');
+};
+
+exports.rescaleCircles = (g, x, y) => {
+  g.selectAll('circle')
+  .attr('cx', (d) => x(time(d)))
+  .attr('cy', (d) => y(price(d)));
 };

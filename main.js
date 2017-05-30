@@ -51,33 +51,20 @@ const TradeList = require('./tradelist');
   y.domain([d3.min(data.bboList, askPrice) - 0.4, d3.max(data.bboList, askPrice)]);
 
   const askAreaPath = g.append('path')
-    // .data([data.bboList])
     .attr('fill', '#9A5E20')
-    .attr('clip-path', 'url(#clip)')
-    // .attr('d', askArea);
+    .attr('clip-path', 'url(#clip)');
 
   const bidAreaPath = g.append('path')
-    // .data([data.bboList])
     .attr('fill', '#467349')
-    .attr('clip-path', 'url(#clip)')
-    // .attr('d', bidArea);
+    .attr('clip-path', 'url(#clip)');
 
   const xGroup = g.append("g")
     .attr("transform", `translate(0, ${graphHeight})`)
     .attr('class', 'x-axis');
 
   const yGroup = g.append("g")
-    .attr('class', 'y-axis')
-    // .call(yAxis)
-    // .append("text")
-    //   .attr("fill", "black")
-    //   .attr("transform", "rotate(-90)")
-    //   .attr("y", 6)
-    //   .attr("dy", "0.71em")
-    //   .attr("text-anchor", "end")
-    //   .text("Price ($)");
+    .attr('class', 'y-axis');
 
-  // TradeList.createTradeCircles(g, data, x, y);
 
   const zoom = d3.zoom()
   .extent([[0, 0], [graphWidth, graphHeight]])
@@ -98,12 +85,11 @@ const TradeList = require('./tradelist');
       .attr("width", graphWidth)
       .attr("height", graphHeight);
 
+  TradeList.createTradeCircles(g, data, x, y);
   // const xExtent = d3.extent(data.bboList, time);
   // const yExtent = d3.extent(data.bboList, askPrice);
   // zoom.translateExtent([[x(xExtent[0]), -Infinity], [x(xExtent[1]), Infinity]])
 
-  // y.domain([d3.min(data.bboList, askPrice) - 0.4, d3.max(data.bboList, askPrice)]);
-  // yGroup.call(yAxis).select(".domain").remove();
   askAreaPath.datum(data.bboList);
   bidAreaPath.datum(data.bboList);
   view.call(zoom.transform, d3.zoomIdentity);
@@ -122,12 +108,10 @@ const TradeList = require('./tradelist');
             .attr("text-anchor", "end")
             .text("Price ($)");
     askAreaPath.attr("d", askArea.x(function(d) { return rescaleX(time(d)); }));
-
     askAreaPath.attr('d', askArea.y1(function(d) { return rescaleY(askPrice(d)); }));
     bidAreaPath.attr("d", bidArea.x(function(d) { return rescaleX(time(d)); }));
     bidAreaPath.attr('d', bidArea.y1(function(d) { return rescaleY(bidPrice(d)); }));
 
-
+    TradeList.rescaleCircles(g, rescaleX, rescaleY);
   }
-
 })();
