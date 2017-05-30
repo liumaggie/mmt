@@ -113,7 +113,14 @@ const TradeList = require('./tradelist');
     const rescaleX = d3.event.transform.rescaleX(x);
     const rescaleY = d3.event.transform.rescaleY(y);
     xGroup.call(xAxis.scale(rescaleX));
-    yGroup.call(yAxis.scale(rescaleY));
+    yGroup.call(yAxis.scale(rescaleY))
+          .append("text")
+            .attr("fill", "black")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", "0.71em")
+            .attr("text-anchor", "end")
+            .text("Price ($)");
     askAreaPath.attr("d", askArea.x(function(d) { return rescaleX(time(d)); }));
 
     askAreaPath.attr('d', askArea.y1(function(d) { return rescaleY(askPrice(d)); }));

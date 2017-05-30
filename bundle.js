@@ -17039,7 +17039,7 @@ var TradeList = __webpack_require__(3);
     var rescaleX = d3.event.transform.rescaleX(x);
     var rescaleY = d3.event.transform.rescaleY(y);
     xGroup.call(xAxis.scale(rescaleX));
-    yGroup.call(yAxis.scale(rescaleY));
+    yGroup.call(yAxis.scale(rescaleY)).append("text").attr("fill", "black").attr("transform", "rotate(-90)").attr("y", 6).attr("dy", "0.71em").attr("text-anchor", "end").text("Price ($)");
     askAreaPath.attr("d", askArea.x(function (d) {
       return rescaleX(time(d));
     }));
