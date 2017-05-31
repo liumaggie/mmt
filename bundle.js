@@ -16948,6 +16948,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 var d3 = __webpack_require__(0);
 var data = __webpack_require__(2);
 var TradeList = __webpack_require__(3);
+var PriceDisplay = __webpack_require__(5);
 
 var totalWidth = 1180;
 var totalHeight = 620;
@@ -16997,14 +16998,27 @@ var bidArea = d3.area().curve(d3.curveStepAfter).x(function (d) {
 x.domain(d3.extent(data.bboList, time));
 y.domain([d3.min(data.bboList, askPrice) - 0.4, d3.max(data.bboList, askPrice)]);
 
-var askAreaPath = g.append('path').attr('fill', '#9A5E20').attr('clip-path', 'url(#clip)');
-// .on('mouseover', () => console.log('mousey'))
+var askAreaPath = g.append('path').attr('fill', '#9A5E20').attr('clip-path', 'url(#clip)').attr('class', 'askArea').on('mousemove', mousemove).on('mouseout', function () {
+  tooltip.style('display', 'none');
+});
 
 var bidAreaPath = g.append('path').attr('fill', '#467349').attr('clip-path', 'url(#clip)');
 
 var tooltip = d3.select('body').append('div').attr('class', 'tooltip');
 
-// TradeList.createTradeCircles(g, data, x, y, tooltip);
+var askCircle = PriceDisplay.createMouseoverCircle(g, 'ask-circle');
+var bidCircle = PriceDisplay.createMouseoverCircle(g, 'bid-circle');
+
+function mousemove() {
+  tooltip.style('display', null);
+  var xValue = x.invert(d3.mouse(this)[0]);
+  var yValue = PriceDisplay.calculateYValue(xValue, data, time);
+
+  PriceDisplay.updateCircles(askCircle, xValue, askPrice(yValue), x, y);
+  PriceDisplay.updateCircles(bidCircle, xValue, bidPrice(yValue), x, y);
+
+  tooltip.html('Ask Price: $' + askPrice(yValue) + '<br>\n    Bid Price: $' + bidPrice(yValue)).style('left', d3.event.pageX + 5 + 'px').style('top', d3.event.pageY - 28 + 'px');
+}
 
 var xGroup = g.append("g").attr("transform", 'translate(0, ' + graphHeight + ')').attr('class', 'x-axis');
 
@@ -17039,6 +17053,13 @@ function zoomed() {
   }));
 
   TradeList.rescaleCircles(g, rescaleX, rescaleY);
+
+  // const askXValue = rescaleX(d3.selectAll('.ask-circle')._groups[0][0].cx.animVal.value);
+  // const bidXValue = rescaleX(d3.selectAll('.bid-circle')._groups[0][0].cx.animVal.value);
+  // const askYValue = PriceDisplay.calculateYValue(askXValue, data, time);
+  // const bidYValue = PriceDisplay.calculateYValue(bidXValue, data, time);
+  // PriceDisplay.updateCircles(askCircle, askXValue, askPrice(askYValue), rescaleX, rescaleY);
+  // PriceDisplay.updateCircles(bidCircle, bidXValue, bidPrice(bidYValue), rescaleX, rescaleY);
 }
 
 /***/ }),
@@ -32358,24 +32379,78 @@ var price = function price(d) {
   return d.price / 10000;
 };
 
+var handleMouseover = function handleMouseover(tooltip, d) {
+  tooltip.style('display', null);
+  tooltip.transition().duration(200);
+  tooltip.html('Price: $' + price(d) + '<br>\n    Shares: ' + d.shares).style('left', d3.event.pageX + 5 + 'px').style('top', d3.event.pageY - 28 + 'px');
+};
+
+var handleMouseout = function handleMouseout(tooltip) {
+  tooltip.style('display', 'none');
+};
+
 exports.createTradeCircles = function (g, data, x, y, tooltip) {
-  g.selectAll('circle').data(data.tradeList).enter().append('circle').attr('class', 'dot').attr('r', 2).attr('cx', function (d) {
+  g.selectAll('.dot').data(data.tradeList).enter().append('circle').attr('class', 'dot').attr('r', 2).attr('cx', function (d) {
     return x(time(d));
   }).attr('cy', function (d) {
     return y(price(d));
   }).style('fill', function (d) {
     return d.tradeType === 'P' ? '#CB5D6B' : '#000';
   }).on('mouseover', function (d) {
-    tooltip.transition().duration(200);
-    tooltip.html('Price: $' + price(d) + '<br>\n        Shares: ' + d.shares).style('left', d3.event.pageX + 5 + 'px').style('top', d3.event.pageY - 28 + 'px');
+    return handleMouseover(tooltip, d);
+  }).on('mouseout', function (d) {
+    return handleMouseout(tooltip);
   });
 };
 
 exports.rescaleCircles = function (g, x, y) {
-  g.selectAll('circle').attr('clip-path', 'url(#clip)').attr('cx', function (d) {
+  g.selectAll('.dot').attr('clip-path', 'url(#clip)').attr('cx', function (d) {
     return x(time(d));
   }).attr('cy', function (d) {
     return y(price(d));
+  });
+};
+
+/***/ }),
+/* 4 */,
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var d3 = __webpack_require__(0);
+
+exports.createMouseoverCircle = function (g, className) {
+  return g.append('circle').attr('class', className).attr('r', 3).attr('display', 'none');
+};
+
+exports.updateCircles = function (circle, x0, y0, xScale, yScale) {
+  circle.attr('display', 'block').attr('cx', xScale(x0)).attr('cy', yScale(y0));
+};
+
+exports.calculateYValue = function (xValue, data, time) {
+  var bisect = d3.bisector(function (d) {
+    return time(d);
+  }).left;
+  var idx = bisect(data.bboList, xValue, 1);
+  var d0 = data.bboList[idx - 1];
+  var d1 = data.bboList[idx];
+  var yValue = xValue - time(d0) > time(d1) - xValue ? d1 : d0;
+  return yValue;
+};
+
+exports.rescaleCircles = function (g, xScale, yScale, time, askPrice, bidPrice) {
+  g.selectAll('.askCircle').attr('clip-path', 'url(#clip)').attr('cx', function (d) {
+    return xScale(time(d));
+  }).attr('cy', function (d) {
+    return yScale(askPrice(d));
+  });
+
+  g.selectAll('.bidCircle').attr('clip-path', 'url(#clip)').attr('cx', function (d) {
+    return xScale(time(d));
+  }).attr('cy', function (d) {
+    return yScale(bidPrice(d));
   });
 };
 

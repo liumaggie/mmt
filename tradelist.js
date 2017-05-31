@@ -12,8 +12,23 @@ const parseTime = d3.timeParse('%H:%M:%S.%L');
 let time = (d) => parseTime(convertTime(d.time));
 let price = (d) => d.price/10000;
 
+const handleMouseover = (tooltip, d) => {
+  tooltip.style('display', null);
+  tooltip.transition().duration(200);
+  tooltip.html(
+    `Price: $${price(d)}<br>
+    Shares: ${d.shares}`
+  )
+    .style('left', `${d3.event.pageX + 5}px`)
+    .style('top', `${d3.event.pageY - 28}px`);
+};
+
+const handleMouseout = (tooltip) => {
+  tooltip.style('display', 'none');
+};
+
 exports.createTradeCircles = (g, data, x, y, tooltip) => {
-  g.selectAll('circle')
+  g.selectAll('.dot')
     .data(data.tradeList)
     .enter()
     .append('circle')
@@ -22,19 +37,12 @@ exports.createTradeCircles = (g, data, x, y, tooltip) => {
     .attr('cx', (d) => x(time(d)))
     .attr('cy', (d) => y(price(d)))
     .style('fill', (d) => d.tradeType === 'P' ? '#CB5D6B' : '#000')
-    .on('mouseover', (d) => {
-      tooltip.transition().duration(200);
-      tooltip.html(
-        `Price: $${price(d)}<br>
-        Shares: ${d.shares}`
-      )
-        .style('left', `${d3.event.pageX + 5}px`)
-        .style('top', `${d3.event.pageY - 28}px`);
-    });
+    .on('mouseover', (d) => handleMouseover(tooltip, d))
+    .on('mouseout', (d) => handleMouseout(tooltip));
 };
 
 exports.rescaleCircles = (g, x, y) => {
-  g.selectAll('circle')
+  g.selectAll('.dot')
   .attr('clip-path', 'url(#clip)')
   .attr('cx', (d) => x(time(d)))
   .attr('cy', (d) => y(price(d)));

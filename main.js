@@ -1,6 +1,7 @@
 const d3 = require('d3');
 const data = require('./stock.json');
 const TradeList = require('./tradelist');
+const PriceDisplay = require('./price-display');
 
 const totalWidth = 1180;
 const totalHeight = 620;
@@ -62,10 +63,13 @@ const bidArea = d3.area()
 x.domain(d3.extent(data.bboList, time));
 y.domain([d3.min(data.bboList, askPrice) - 0.4, d3.max(data.bboList, askPrice)]);
 
+
 const askAreaPath = g.append('path')
   .attr('fill', '#9A5E20')
-  .attr('clip-path', 'url(#clip)');
-  // .on('mouseover', () => console.log('mousey'))
+  .attr('clip-path', 'url(#clip)')
+  .attr('class', 'askArea')
+  .on('mousemove', mousemove)
+  .on('mouseout', () => { tooltip.style('display', 'none'); });
 
 const bidAreaPath = g.append('path')
   .attr('fill', '#467349')
@@ -74,7 +78,25 @@ const bidAreaPath = g.append('path')
 const tooltip = d3.select('body').append('div')
   .attr('class', 'tooltip');
 
-// TradeList.createTradeCircles(g, data, x, y, tooltip);
+
+const askCircle = PriceDisplay.createMouseoverCircle(g, 'ask-circle');
+const bidCircle = PriceDisplay.createMouseoverCircle(g, 'bid-circle');
+
+function mousemove() {
+  tooltip.style('display', null);
+  const xValue = x.invert(d3.mouse(this)[0]);
+  const yValue = PriceDisplay.calculateYValue(xValue, data, time);
+
+  PriceDisplay.updateCircles(askCircle, xValue, askPrice(yValue), x, y);
+  PriceDisplay.updateCircles(bidCircle, xValue, bidPrice(yValue), x, y);
+
+  tooltip.html(
+    `Ask Price: $${askPrice(yValue)}<br>
+    Bid Price: $${bidPrice(yValue)}`
+  )
+    .style('left', `${d3.event.pageX + 5}px`)
+    .style('top', `${d3.event.pageY - 28}px`);
+}
 
 const xGroup = g.append("g")
   .attr("transform", `translate(0, ${graphHeight})`)
@@ -113,4 +135,12 @@ function zoomed() {
   bidAreaPath.attr('d', bidArea.y1(function(d) { return rescaleY(bidPrice(d)); }));
 
   TradeList.rescaleCircles(g, rescaleX, rescaleY);
+
+
+  // const askXValue = rescaleX(d3.selectAll('.ask-circle')._groups[0][0].cx.animVal.value);
+  // const bidXValue = rescaleX(d3.selectAll('.bid-circle')._groups[0][0].cx.animVal.value);
+  // const askYValue = PriceDisplay.calculateYValue(askXValue, data, time);
+  // const bidYValue = PriceDisplay.calculateYValue(bidXValue, data, time);
+  // PriceDisplay.updateCircles(askCircle, askXValue, askPrice(askYValue), rescaleX, rescaleY);
+  // PriceDisplay.updateCircles(bidCircle, bidXValue, bidPrice(bidYValue), rescaleX, rescaleY);
 }
