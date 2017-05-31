@@ -16955,10 +16955,12 @@ var totalHeight = 620;
 var margin = { top: 30, right: 30, bottom: 50, left: 60 };
 var graphWidth = totalWidth - margin.right - margin.left;
 var graphHeight = totalHeight - margin.top - margin.bottom;
+var xScale = void 0,
+    yScale = void 0;
 
 var svg = d3.select('figure').append('svg').attr('width', totalWidth).attr('height', totalHeight).style('border', '1px solid black').style('background-color', '#B7B792');
 
-var zoom = d3.zoom().extent([[0, 0], [graphWidth, graphHeight]]).scaleExtent([1, 8]).translateExtent([[0, 0], [graphWidth, graphHeight]]).on('zoom', zoomed);
+var zoom = d3.zoom().extent([[0, 0], [graphWidth, graphHeight]]).scaleExtent([1, 20]).translateExtent([[0, 0], [graphWidth, graphHeight]]).on('zoom', zoomed);
 
 var view = svg.append("rect").attr("width", graphWidth).attr("height", graphHeight).attr("fill", "none");
 
@@ -16999,26 +17001,19 @@ x.domain(d3.extent(data.bboList, time));
 y.domain([d3.min(data.bboList, askPrice) - 0.4, d3.max(data.bboList, askPrice)]);
 
 var askAreaPath = g.append('path').attr('fill', '#9A5E20').attr('clip-path', 'url(#clip)').attr('class', 'askArea').on('mousemove', mousemove).on('mouseout', function () {
-  tooltip.style('display', 'none');
+  return priceTooltip.style('display', 'none');
 });
 
-var bidAreaPath = g.append('path').attr('fill', '#467349').attr('clip-path', 'url(#clip)');
+var bidAreaPath = g.append('path').attr('fill', '#467349').attr('clip-path', 'url(#clip)').on('mousemove', mousemove).on('mouseout', function () {
+  return priceTooltip.style('display', 'none');
+});
 
-var tooltip = d3.select('body').append('div').attr('class', 'tooltip');
+var tradeTooltip = d3.select('body').append('div').attr('class', 'tooltip trade-tooltip').style('display', 'none');
+
+var priceTooltip = d3.select('body').append('div').attr('class', 'tooltip price-tooltip').style('display', 'none');
 
 var askCircle = PriceDisplay.createMouseoverCircle(g, 'ask-circle');
 var bidCircle = PriceDisplay.createMouseoverCircle(g, 'bid-circle');
-
-function mousemove() {
-  tooltip.style('display', null);
-  var xValue = x.invert(d3.mouse(this)[0]);
-  var yValue = PriceDisplay.calculateYValue(xValue, data, time);
-
-  PriceDisplay.updateCircles(askCircle, xValue, askPrice(yValue), x, y);
-  PriceDisplay.updateCircles(bidCircle, xValue, bidPrice(yValue), x, y);
-
-  tooltip.html('Ask Price: $' + askPrice(yValue) + '<br>\n    Bid Price: $' + bidPrice(yValue)).style('left', d3.event.pageX + 5 + 'px').style('top', d3.event.pageY - 28 + 'px');
-}
 
 var xGroup = g.append("g").attr("transform", 'translate(0, ' + graphHeight + ')').attr('class', 'x-axis');
 
@@ -17032,7 +17027,7 @@ askAreaPath.datum(data.bboList);
 bidAreaPath.datum(data.bboList);
 view.call(zoom.transform, d3.zoomIdentity);
 
-TradeList.createTradeCircles(g, data, x, y, tooltip);
+TradeList.createTradeCircles(g, data, x, y, tradeTooltip, priceTooltip);
 
 function zoomed() {
   var rescaleX = d3.event.transform.rescaleX(x);
@@ -17054,13 +17049,29 @@ function zoomed() {
 
   TradeList.rescaleCircles(g, rescaleX, rescaleY);
 
-  // const askXValue = rescaleX(d3.selectAll('.ask-circle')._groups[0][0].cx.animVal.value);
-  // const bidXValue = rescaleX(d3.selectAll('.bid-circle')._groups[0][0].cx.animVal.value);
-  // const askYValue = PriceDisplay.calculateYValue(askXValue, data, time);
-  // const bidYValue = PriceDisplay.calculateYValue(bidXValue, data, time);
-  // PriceDisplay.updateCircles(askCircle, askXValue, askPrice(askYValue), rescaleX, rescaleY);
-  // PriceDisplay.updateCircles(bidCircle, bidXValue, bidPrice(bidYValue), rescaleX, rescaleY);
+  var askXValue = rescaleX.invert(d3.selectAll('.ask-circle')._groups[0][0].cx.animVal.value);
+  var bidXValue = rescaleX.invert(d3.selectAll('.bid-circle')._groups[0][0].cx.animVal.value);
+  var askYValue = PriceDisplay.calculateYValue(askXValue, data, time);
+  var bidYValue = PriceDisplay.calculateYValue(bidXValue, data, time);
+  PriceDisplay.updateCircles(askCircle, askXValue, askPrice(askYValue), rescaleX, rescaleY);
+  PriceDisplay.updateCircles(bidCircle, bidXValue, bidPrice(bidYValue), rescaleX, rescaleY);
+  xScale = rescaleX;
+  yScale = rescaleY;
 }
+
+function mousemove() {
+  priceTooltip.style('display', null);
+
+  var xValue = xScale.invert(d3.mouse(this)[0]);
+  var yValue = PriceDisplay.calculateYValue(xValue, data, time);
+
+  PriceDisplay.updateCircles(askCircle, xValue, askPrice(yValue), xScale, yScale);
+  PriceDisplay.updateCircles(bidCircle, xValue, bidPrice(yValue), xScale, yScale);
+
+  priceTooltip.html('Ask Price: $' + askPrice(yValue) + '<br>\n    Bid Price: $' + bidPrice(yValue)).style('left', d3.event.pageX + 5 + 'px').style('top', d3.event.pageY - 28 + 'px');
+}
+
+TradeList.createToggleButton(svg, totalWidth, totalHeight);
 
 /***/ }),
 /* 2 */
@@ -32379,25 +32390,36 @@ var price = function price(d) {
   return d.price / 10000;
 };
 
-var handleMouseover = function handleMouseover(tooltip, d) {
+var handleMouseover = function handleMouseover(tooltip, pricetooltip, d) {
+  pricetooltip.style('display', 'none');
   tooltip.style('display', null);
   tooltip.transition().duration(200);
-  tooltip.html('Price: $' + price(d) + '<br>\n    Shares: ' + d.shares).style('left', d3.event.pageX + 5 + 'px').style('top', d3.event.pageY - 28 + 'px');
+  tooltip.html('Price: $' + price(d) + '<br>\n    Shares: ' + d.shares + '<br>\n    Trade Type: ' + d.tradeType + '<br>\n    Order: ' + d.orderReferenceNumber).style('left', d3.event.pageX + 10 + 'px').style('top', d3.event.pageY - 60 + 'px');
 };
 
 var handleMouseout = function handleMouseout(tooltip) {
   tooltip.style('display', 'none');
 };
 
-exports.createTradeCircles = function (g, data, x, y, tooltip) {
-  g.selectAll('.dot').data(data.tradeList).enter().append('circle').attr('class', 'dot').attr('r', 2).attr('cx', function (d) {
+exports.createTradeCircles = function (g, data, x, y, tooltip, pricetooltip) {
+  g.selectAll('.dot').data(data.tradeList).enter().append('circle').attr('class', 'dot').attr('r', function (d) {
+    if (d.shares <= 50) {
+      return 0.5;
+    } else if (d.shares < 100) {
+      return 1;
+    } else if (d.shares < 200) {
+      return 1.5;
+    } else {
+      return 3;
+    }
+  }).attr('cx', function (d) {
     return x(time(d));
   }).attr('cy', function (d) {
     return y(price(d));
   }).style('fill', function (d) {
     return d.tradeType === 'P' ? '#CB5D6B' : '#000';
   }).on('mouseover', function (d) {
-    return handleMouseover(tooltip, d);
+    return handleMouseover(tooltip, pricetooltip, d);
   }).on('mouseout', function (d) {
     return handleMouseout(tooltip);
   });
@@ -32408,6 +32430,19 @@ exports.rescaleCircles = function (g, x, y) {
     return x(time(d));
   }).attr('cy', function (d) {
     return y(price(d));
+  });
+};
+
+exports.createToggleButton = function (g, width, height) {
+  var btn = g.append('g').attr('class', 'btn').attr('transform', 'translate(10,10)');
+  var btnBg = btn.append('rect').attr('width', 100).attr('height', 20).attr('rx', 3).attr('ry', 3).attr('x', width - 150).attr('y', 30);
+  btn.append('text').attr('x', width - 138).attr('y', 43).text('Toggle Trades');
+  btn.on('click', function () {
+    if (g.selectAll('.dot').style('display') === 'none') {
+      g.selectAll('.dot').style('display', 'block');
+    } else {
+      g.selectAll('.dot').style('display', 'none');
+    }
   });
 };
 
@@ -32426,7 +32461,7 @@ exports.createMouseoverCircle = function (g, className) {
 };
 
 exports.updateCircles = function (circle, x0, y0, xScale, yScale) {
-  circle.attr('display', 'block').attr('cx', xScale(x0)).attr('cy', yScale(y0));
+  circle.attr('display', 'block').attr('cx', xScale(x0)).attr('cy', yScale(y0)).attr('x-scale', xScale).attr('y-scale', yScale);
 };
 
 exports.calculateYValue = function (xValue, data, time) {
@@ -32438,20 +32473,6 @@ exports.calculateYValue = function (xValue, data, time) {
   var d1 = data.bboList[idx];
   var yValue = xValue - time(d0) > time(d1) - xValue ? d1 : d0;
   return yValue;
-};
-
-exports.rescaleCircles = function (g, xScale, yScale, time, askPrice, bidPrice) {
-  g.selectAll('.askCircle').attr('clip-path', 'url(#clip)').attr('cx', function (d) {
-    return xScale(time(d));
-  }).attr('cy', function (d) {
-    return yScale(askPrice(d));
-  });
-
-  g.selectAll('.bidCircle').attr('clip-path', 'url(#clip)').attr('cx', function (d) {
-    return xScale(time(d));
-  }).attr('cy', function (d) {
-    return yScale(bidPrice(d));
-  });
 };
 
 /***/ })

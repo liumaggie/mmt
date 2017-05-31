@@ -10,7 +10,9 @@ exports.createMouseoverCircle = (g, className) => {
 exports.updateCircles = (circle, x0, y0, xScale, yScale) => {
   circle.attr('display', 'block')
         .attr('cx', xScale(x0))
-        .attr('cy', yScale(y0));
+        .attr('cy', yScale(y0))
+        .attr('x-scale', xScale)
+        .attr('y-scale', yScale);
 };
 
 exports.calculateYValue = (xValue, data, time) => {
@@ -20,16 +22,4 @@ exports.calculateYValue = (xValue, data, time) => {
   const d1 = data.bboList[idx];
   const yValue = xValue - time(d0) > time(d1) - xValue ? d1 : d0;
   return yValue;
-};
-
-exports.rescaleCircles = (g, xScale, yScale, time, askPrice, bidPrice) => {
-  g.selectAll('.askCircle')
-  .attr('clip-path', 'url(#clip)')
-  .attr('cx', (d) => xScale(time(d)))
-  .attr('cy', (d) => yScale(askPrice(d)));
-
-  g.selectAll('.bidCircle')
-  .attr('clip-path', 'url(#clip)')
-  .attr('cx', (d) => xScale(time(d)))
-  .attr('cy', (d) => yScale(bidPrice(d)));
 };

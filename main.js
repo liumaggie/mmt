@@ -8,16 +8,17 @@ const totalHeight = 620;
 const margin = {top: 30, right: 30, bottom: 50, left: 60};
 const graphWidth = totalWidth - margin.right - margin.left;
 const graphHeight = totalHeight - margin.top - margin.bottom;
+let xScale, yScale;
 
 const svg = d3.select('figure').append('svg')
   .attr('width', totalWidth)
   .attr('height', totalHeight)
   .style('border', '1px solid black')
-  .style('background-color', '#B7B792')
+  .style('background-color', '#B7B792');
 
 const zoom = d3.zoom()
   .extent([[0, 0], [graphWidth, graphHeight]])
-  .scaleExtent([1, 8])
+  .scaleExtent([1, 20])
   .translateExtent([[0, 0], [graphWidth, graphHeight]])
   .on('zoom', zoomed);
 
@@ -69,34 +70,24 @@ const askAreaPath = g.append('path')
   .attr('clip-path', 'url(#clip)')
   .attr('class', 'askArea')
   .on('mousemove', mousemove)
-  .on('mouseout', () => { tooltip.style('display', 'none'); });
+  .on('mouseout', () => priceTooltip.style('display', 'none'));
 
 const bidAreaPath = g.append('path')
   .attr('fill', '#467349')
-  .attr('clip-path', 'url(#clip)');
+  .attr('clip-path', 'url(#clip)')
+  .on('mousemove', mousemove)
+  .on('mouseout', () => priceTooltip.style('display', 'none'));
 
-const tooltip = d3.select('body').append('div')
-  .attr('class', 'tooltip');
+const tradeTooltip = d3.select('body').append('div')
+  .attr('class', 'tooltip trade-tooltip')
+  .style('display', 'none');
 
+const priceTooltip = d3.select('body').append('div')
+  .attr('class', 'tooltip price-tooltip')
+  .style('display', 'none');
 
 const askCircle = PriceDisplay.createMouseoverCircle(g, 'ask-circle');
 const bidCircle = PriceDisplay.createMouseoverCircle(g, 'bid-circle');
-
-function mousemove() {
-  tooltip.style('display', null);
-  const xValue = x.invert(d3.mouse(this)[0]);
-  const yValue = PriceDisplay.calculateYValue(xValue, data, time);
-
-  PriceDisplay.updateCircles(askCircle, xValue, askPrice(yValue), x, y);
-  PriceDisplay.updateCircles(bidCircle, xValue, bidPrice(yValue), x, y);
-
-  tooltip.html(
-    `Ask Price: $${askPrice(yValue)}<br>
-    Bid Price: $${bidPrice(yValue)}`
-  )
-    .style('left', `${d3.event.pageX + 5}px`)
-    .style('top', `${d3.event.pageY - 28}px`);
-}
 
 const xGroup = g.append("g")
   .attr("transform", `translate(0, ${graphHeight})`)
@@ -122,7 +113,7 @@ askAreaPath.datum(data.bboList);
 bidAreaPath.datum(data.bboList);
 view.call(zoom.transform, d3.zoomIdentity);
 
-TradeList.createTradeCircles(g, data, x, y, tooltip);
+TradeList.createTradeCircles(g, data, x, y, tradeTooltip, priceTooltip);
 
 function zoomed() {
   const rescaleX = d3.event.transform.rescaleX(x);
@@ -136,11 +127,31 @@ function zoomed() {
 
   TradeList.rescaleCircles(g, rescaleX, rescaleY);
 
-
-  // const askXValue = rescaleX(d3.selectAll('.ask-circle')._groups[0][0].cx.animVal.value);
-  // const bidXValue = rescaleX(d3.selectAll('.bid-circle')._groups[0][0].cx.animVal.value);
-  // const askYValue = PriceDisplay.calculateYValue(askXValue, data, time);
-  // const bidYValue = PriceDisplay.calculateYValue(bidXValue, data, time);
-  // PriceDisplay.updateCircles(askCircle, askXValue, askPrice(askYValue), rescaleX, rescaleY);
-  // PriceDisplay.updateCircles(bidCircle, bidXValue, bidPrice(bidYValue), rescaleX, rescaleY);
+  const askXValue = rescaleX.invert(d3.selectAll('.ask-circle')._groups[0][0].cx.animVal.value);
+  const bidXValue = rescaleX.invert(d3.selectAll('.bid-circle')._groups[0][0].cx.animVal.value);
+  const askYValue = PriceDisplay.calculateYValue(askXValue, data, time);
+  const bidYValue = PriceDisplay.calculateYValue(bidXValue, data, time);
+  PriceDisplay.updateCircles(askCircle, askXValue, askPrice(askYValue), rescaleX, rescaleY);
+  PriceDisplay.updateCircles(bidCircle, bidXValue, bidPrice(bidYValue), rescaleX, rescaleY);
+  xScale = rescaleX;
+  yScale = rescaleY;
 }
+
+function mousemove() {
+  priceTooltip.style('display', null);
+
+  const xValue = xScale.invert(d3.mouse(this)[0]);
+  const yValue = PriceDisplay.calculateYValue(xValue, data, time);
+
+  PriceDisplay.updateCircles(askCircle, xValue, askPrice(yValue), xScale, yScale);
+  PriceDisplay.updateCircles(bidCircle, xValue, bidPrice(yValue), xScale, yScale);
+
+  priceTooltip.html(
+    `Ask Price: $${askPrice(yValue)}<br>
+    Bid Price: $${bidPrice(yValue)}`
+  )
+    .style('left', `${d3.event.pageX + 5}px`)
+    .style('top', `${d3.event.pageY - 28}px`);
+}
+
+TradeList.createToggleButton(svg, totalWidth, totalHeight);
