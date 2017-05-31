@@ -1,4 +1,4 @@
 node_modules/
-./tradelist.js
-./stock.json
-./main.js
+/tradelist.js
+/stock.json
+/main.js
