@@ -17095,29 +17095,37 @@ var y = d3.scaleLinear().domain([d3.extent(currData, openPrice)]).range([graphHe
 var xAxis = d3.axisBottom(x);
 var yAxis = d3.axisLeft(y);
 
-var openArea = d3.area().curve(d3.curveStepAfter).x(function (d) {
+var openArea = d3.line()
+// .curve(d3.curveStepAfter)
+.x(function (d) {
   return x(time(d));
-}).y1(function (d) {
+}).y(function (d) {
   return y(openPrice(d));
-}).y0(0);
+});
+// .y0(0);
 
-var closeArea = d3.area().curve(d3.curveStepAfter).x(function (d) {
+var closeArea = d3.line()
+// .curve(d3.curveStepAfter)
+.x(function (d) {
   return x(time(d));
-}).y1(function (d) {
+}).y(function (d) {
   return y(closePrice(d));
-}).y0(graphHeight);
+});
+// .y0(graphHeight);
 
 x.domain(d3.extent(currData, time));
 y.domain([d3.min(currData, openPrice) - 0.4, d3.max(currData, openPrice)]);
 
-var openAreaPath = g.append('path').attr('fill', '#9A5E20').attr('clip-path', 'url(#clip)').attr('class', 'askArea');
+var openAreaPath = g.append('path').attr("fill", "none").attr("stroke", "steelblue").attr("stroke-width", 1.5).attr('clip-path', 'url(#clip)').attr('class', 'askArea');
 // .on('mousemove', mousemove)
 // .on('mouseout', () => priceTooltip.style('display', 'none'));
 
-var closeAreaPath = g.append('path').attr('fill', '#467349').attr('clip-path', 'url(#clip)');
+var closeAreaPath = g.append('path')
+// .attr('fill', '#467349')
+.attr('clip-path', 'url(#clip)');
 // .on('mousemove', mousemove)
 // .on('mouseout', () => priceTooltip.style('display', 'none'));
-//
+
 // const tradeTooltip = d3.select('body').append('div')
 //   .attr('class', 'tooltip trade-tooltip')
 //   .style('display', 'none');
@@ -17151,15 +17159,11 @@ function zoomed() {
   openAreaPath.attr("d", openArea.x(function (d) {
     return rescaleX(time(d));
   }));
-  openAreaPath.attr('d', openArea.y1(function (d) {
+  openAreaPath.attr('d', openArea.y(function (d) {
     return rescaleY(openPrice(d));
   }));
-  closeAreaPath.attr("d", closeArea.x(function (d) {
-    return rescaleX(time(d));
-  }));
-  closeAreaPath.attr('d', closeArea.y1(function (d) {
-    return rescaleY(closePrice(d));
-  }));
+  // closeAreaPath.attr("d", closeArea.x(function(d) { return rescaleX(time(d)); }));
+  // closeAreaPath.attr('d', closeArea.y(function(d) { return rescaleY(closePrice(d)); }));
 
   // TradeList.rescaleCircles(g, rescaleX, rescaleY);
 
