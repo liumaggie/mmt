@@ -16949,12 +16949,8 @@ var d3 = __webpack_require__(0);
 // const data = require('./stock.json');
 var TradeList = __webpack_require__(3);
 var PriceDisplay = __webpack_require__(5);
-var ApiUtil = __webpack_require__(6);
 
-document.addEventListener("DOMContentLoaded", function () {
-  var data = ApiUtil.fetchQuotes();
-  console.log(data);
-});
+document.addEventListener("DOMContentLoaded", function () {});
 
 // const totalWidth = 1180;
 // const totalHeight = 620;
@@ -17218,20 +17214,6 @@ exports.calculateYValue = function (xValue, data, time) {
   var d1 = data.bboList[idx];
   var yValue = xValue - time(d0) > time(d1) - xValue ? d1 : d0;
   return yValue;
-};
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-exports.fetchQuotes = function () {
-  return $.ajax({
-    method: 'GET',
-    url: 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quotes%20where%20symbol%20in%20(%22YHOO%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback='
-  });
 };
 
 /***/ })
