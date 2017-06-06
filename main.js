@@ -75,7 +75,9 @@ const openAreaPath = g.append('path')
   // .on('mouseout', () => priceTooltip.style('display', 'none'));
 
 const closeAreaPath = g.append('path')
-  // .attr('fill', '#467349')
+  .attr("fill", "none")
+  .attr("stroke", "green")
+  .attr("stroke-width", 1.5)
   .attr('clip-path', 'url(#clip)')
   // .on('mousemove', mousemove)
   // .on('mouseout', () => priceTooltip.style('display', 'none'));
@@ -124,8 +126,8 @@ function zoomed() {
   yGroup.call(yAxis.scale(rescaleY));
   openAreaPath.attr("d", openArea.x(function(d) { return rescaleX(time(d)); }));
   openAreaPath.attr('d', openArea.y(function(d) { return rescaleY(openPrice(d)); }));
-  // closeAreaPath.attr("d", closeArea.x(function(d) { return rescaleX(time(d)); }));
-  // closeAreaPath.attr('d', closeArea.y(function(d) { return rescaleY(closePrice(d)); }));
+  closeAreaPath.attr("d", closeArea.x(function(d) { return rescaleX(time(d)); }));
+  closeAreaPath.attr('d', closeArea.y(function(d) { return rescaleY(closePrice(d)); }));
 
   // TradeList.rescaleCircles(g, rescaleX, rescaleY);
 
