@@ -17,9 +17,9 @@ exports.updateCircles = (circle, x0, y0, xScale, yScale) => {
 
 exports.calculateYValue = (xValue, data, time) => {
   const bisect = d3.bisector((d) => time(d)).left;
-  const idx = bisect(data.bboList, xValue, 1);
-  const d0 = data.bboList[idx-1];
-  const d1 = data.bboList[idx];
+  const idx = bisect(data, xValue, 1);
+  const d0 = data[idx-1];
+  const d1 = data[idx];
   const yValue = xValue - time(d0) > time(d1) - xValue ? d1 : d0;
   return yValue;
 };

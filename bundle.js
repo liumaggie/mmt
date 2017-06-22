@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3);
+/******/ 	return __webpack_require__(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -16959,9 +16959,9 @@ exports.calculateYValue = function (xValue, data, time) {
   var bisect = d3.bisector(function (d) {
     return time(d);
   }).left;
-  var idx = bisect(data.bboList, xValue, 1);
-  var d0 = data.bboList[idx - 1];
-  var d1 = data.bboList[idx];
+  var idx = bisect(data, xValue, 1);
+  var d0 = data[idx - 1];
+  var d1 = data[idx];
   var yValue = xValue - time(d0) > time(d1) - xValue ? d1 : d0;
   return yValue;
 };
@@ -17049,159 +17049,6 @@ exports.createToggleButton = function (g, width, height) {
 
 /***/ }),
 /* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var d3 = __webpack_require__(0);
-var TradeList = __webpack_require__(2);
-var PriceDisplay = __webpack_require__(1);
-var appleData = __webpack_require__(6);
-
-var totalWidth = 1180;
-var totalHeight = 620;
-var margin = { top: 30, right: 30, bottom: 50, left: 60 };
-var graphWidth = totalWidth - margin.right - margin.left;
-var graphHeight = totalHeight - margin.top - margin.bottom;
-var currData = appleData;
-var xScale = void 0,
-    yScale = void 0;
-
-var svg = d3.select('figure').append('svg').attr('width', totalWidth).attr('height', totalHeight).style('border', '1px solid black');
-
-var zoom = d3.zoom().extent([[0, 0], [graphWidth, graphHeight]]).scaleExtent([1, 20]).translateExtent([[0, 0], [graphWidth, graphHeight]]).on('zoom', zoomed);
-
-var view = svg.append("rect").attr("width", graphWidth).attr("height", graphHeight).attr("fill", "none");
-
-var g = svg.append('g').attr("transform", 'translate(' + margin.left + ', ' + margin.top + ')').attr("pointer-events", "all").call(zoom);
-
-var parseTime = d3.timeParse('%d-%b-%y');
-
-var time = function time(d) {
-  return parseTime(d.Date);
-};
-var openPrice = function openPrice(d) {
-  return d.Open;
-};
-var closePrice = function closePrice(d) {
-  return d.Close;
-};
-
-var x = d3.scaleTime().domain([d3.extent(currData, time)]).range([0, graphWidth]);
-
-var y = d3.scaleLinear().domain([d3.extent(currData, openPrice)]).range([graphHeight, 0]);
-
-var xAxis = d3.axisBottom(x);
-var yAxis = d3.axisLeft(y);
-
-var openArea = d3.line()
-// .curve(d3.curveStepAfter)
-.x(function (d) {
-  return x(time(d));
-}).y(function (d) {
-  return y(openPrice(d));
-});
-// .y0(0);
-
-var closeArea = d3.line()
-// .curve(d3.curveStepAfter)
-.x(function (d) {
-  return x(time(d));
-}).y(function (d) {
-  return y(closePrice(d));
-});
-// .y0(graphHeight);
-
-x.domain(d3.extent(currData, time));
-y.domain([d3.min(currData, openPrice) - 0.4, d3.max(currData, openPrice)]);
-
-var openAreaPath = g.append('path').attr("fill", "none").attr("stroke", "steelblue").attr("stroke-width", 1.5).attr('clip-path', 'url(#clip)').attr('class', 'askArea');
-// .on('mousemove', mousemove)
-// .on('mouseout', () => priceTooltip.style('display', 'none'));
-
-var closeAreaPath = g.append('path').attr("fill", "none").attr("stroke", "green").attr("stroke-width", 1.5).attr('clip-path', 'url(#clip)');
-// .on('mousemove', mousemove)
-// .on('mouseout', () => priceTooltip.style('display', 'none'));
-
-// const tradeTooltip = d3.select('body').append('div')
-//   .attr('class', 'tooltip trade-tooltip')
-//   .style('display', 'none');
-//
-// const priceTooltip = d3.select('body').append('div')
-//   .attr('class', 'tooltip price-tooltip')
-//   .style('display', 'none');
-//
-// const askCircle = PriceDisplay.createMouseoverCircle(g, 'ask-circle');
-// const bidCircle = PriceDisplay.createMouseoverCircle(g, 'bid-circle');
-//
-var xGroup = g.append("g").attr("transform", 'translate(0, ' + graphHeight + ')').attr('class', 'x-axis');
-
-var yGroup = g.append("g").attr('class', 'y-axis');
-
-yGroup.append("text").attr("fill", "black").attr("transform", "rotate(-90)").attr("y", 13).attr("text-anchor", "end").text("Price ($)");
-
-g.append("clipPath").attr("id", "clip").append("rect").attr("width", graphWidth).attr("height", graphHeight);
-
-openAreaPath.datum(currData);
-closeAreaPath.datum(currData);
-view.call(zoom.transform, d3.zoomIdentity);
-//
-// TradeList.createTradeCircles(g, data, x, y, tradeTooltip, priceTooltip);
-//
-function zoomed() {
-  var rescaleX = d3.event.transform.rescaleX(x);
-  var rescaleY = d3.event.transform.rescaleY(y);
-  xGroup.call(xAxis.scale(rescaleX));
-  yGroup.call(yAxis.scale(rescaleY));
-  openAreaPath.attr("d", openArea.x(function (d) {
-    return rescaleX(time(d));
-  }));
-  openAreaPath.attr('d', openArea.y(function (d) {
-    return rescaleY(openPrice(d));
-  }));
-  closeAreaPath.attr("d", closeArea.x(function (d) {
-    return rescaleX(time(d));
-  }));
-  closeAreaPath.attr('d', closeArea.y(function (d) {
-    return rescaleY(closePrice(d));
-  }));
-
-  // TradeList.rescaleCircles(g, rescaleX, rescaleY);
-
-  // const askXValue = rescaleX.invert(d3.selectAll('.ask-circle')._groups[0][0].cx.animVal.value);
-  // const bidXValue = rescaleX.invert(d3.selectAll('.bid-circle')._groups[0][0].cx.animVal.value);
-  // const askYValue = PriceDisplay.calculateYValue(askXValue, data, time);
-  // const bidYValue = PriceDisplay.calculateYValue(bidXValue, data, time);
-  // PriceDisplay.updateCircles(askCircle, askXValue, askPrice(askYValue), rescaleX, rescaleY);
-  // PriceDisplay.updateCircles(bidCircle, bidXValue, bidPrice(bidYValue), rescaleX, rescaleY);
-  // xScale = rescaleX;
-  // yScale = rescaleY;
-}
-//
-// function mousemove() {
-//   priceTooltip.style('display', null);
-//
-//   const xValue = xScale.invert(d3.mouse(this)[0]);
-//   const yValue = PriceDisplay.calculateYValue(xValue, data, time);
-//
-//   PriceDisplay.updateCircles(askCircle, xValue, askPrice(yValue), xScale, yScale);
-//   PriceDisplay.updateCircles(bidCircle, xValue, bidPrice(yValue), xScale, yScale);
-//
-//   priceTooltip.html(
-//     `Ask Price: $${askPrice(yValue)}<br>
-//     Bid Price: $${bidPrice(yValue)}`
-//   )
-//     .style('left', `${d3.event.pageX + 5}px`)
-//     .style('top', `${d3.event.pageY - 28}px`);
-// }
-//
-// TradeList.createToggleButton(svg, totalWidth, totalHeight);
-
-/***/ }),
-/* 4 */,
-/* 5 */,
-/* 6 */
 /***/ (function(module, exports) {
 
 module.exports = [
@@ -19214,6 +19061,155 @@ module.exports = [
 		"Volume": 22409450
 	}
 ];
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var d3 = __webpack_require__(0);
+var TradeList = __webpack_require__(2);
+var PriceDisplay = __webpack_require__(1);
+var appleData = __webpack_require__(3);
+
+var totalWidth = 1180;
+var totalHeight = 620;
+var margin = { top: 30, right: 30, bottom: 50, left: 60 };
+var graphWidth = totalWidth - margin.right - margin.left;
+var graphHeight = totalHeight - margin.top - margin.bottom;
+var currData = appleData;
+var xScale = void 0,
+    yScale = void 0;
+
+var svg = d3.select('figure').append('svg').attr('width', totalWidth).attr('height', totalHeight).style('border', '1px solid black');
+
+var zoom = d3.zoom().extent([[0, 0], [graphWidth, graphHeight]]).scaleExtent([1, 20]).translateExtent([[0, 0], [graphWidth, graphHeight]]).on('zoom', zoomed);
+
+var view = svg.append("rect").attr("width", graphWidth).attr("height", graphHeight).attr("fill", "none");
+
+var g = svg.append('g').attr("transform", 'translate(' + margin.left + ', ' + margin.top + ')').attr("pointer-events", "all").call(zoom);
+
+var parseTime = d3.timeParse('%d-%b-%y');
+
+var time = function time(d) {
+  return parseTime(d.Date);
+};
+var openPrice = function openPrice(d) {
+  return d.Open;
+};
+var closePrice = function closePrice(d) {
+  return d.Close;
+};
+
+var x = d3.scaleTime().domain([d3.extent(currData, time)]).range([0, graphWidth]);
+
+var y = d3.scaleLinear().domain([d3.extent(currData, openPrice)]).range([graphHeight, 0]);
+
+var xAxis = d3.axisBottom(x);
+var yAxis = d3.axisLeft(y);
+
+var openArea = d3.line()
+// .curve(d3.curveStepAfter)
+.x(function (d) {
+  return x(time(d));
+}).y(function (d) {
+  return y(openPrice(d));
+});
+// .y0(0);
+
+var closeArea = d3.line()
+// .curve(d3.curveStepAfter)
+.x(function (d) {
+  return x(time(d));
+}).y(function (d) {
+  return y(closePrice(d));
+});
+// .y0(graphHeight);
+
+x.domain(d3.extent(currData, time));
+y.domain([d3.min(currData, openPrice) - 0.4, d3.max(currData, openPrice)]);
+
+var openAreaPath = g.append('path').attr("fill", "none").attr("stroke", "steelblue").attr("stroke-width", 1.5).attr('clip-path', 'url(#clip)').attr('class', 'askArea').on('mousemove', mousemove).on('mouseout', function () {
+  return toolTip.style('display', 'none');
+});
+
+var closeAreaPath = g.append('path').attr("fill", "none").attr("stroke", "green").attr("stroke-width", 1.5).attr('clip-path', 'url(#clip)').on('mousemove', mousemove).on('mouseout', function () {
+  return toolTip.style('display', 'none');
+});
+
+// const tradeTooltip = d3.select('body').append('div')
+//   .attr('class', 'tooltip trade-tooltip')
+//   .style('display', 'none');
+//
+// const priceTooltip = d3.select('body').append('div')
+//   .attr('class', 'tooltip price-tooltip')
+//   .style('display', 'none');
+//
+
+var toolTip = d3.select('body').append('div').attr('class', 'tooltip').style('display', 'none');
+
+var openCircle = PriceDisplay.createMouseoverCircle(g, 'open-circle');
+var closeCircle = PriceDisplay.createMouseoverCircle(g, 'close-circle');
+
+var xGroup = g.append("g").attr("transform", 'translate(0, ' + graphHeight + ')').attr('class', 'x-axis');
+
+var yGroup = g.append("g").attr('class', 'y-axis');
+
+yGroup.append("text").attr("fill", "black").attr("transform", "rotate(-90)").attr("y", 13).attr("text-anchor", "end").text("Price ($)");
+
+g.append("clipPath").attr("id", "clip").append("rect").attr("width", graphWidth).attr("height", graphHeight);
+
+openAreaPath.datum(currData);
+closeAreaPath.datum(currData);
+view.call(zoom.transform, d3.zoomIdentity);
+//
+// TradeList.createTradeCircles(g, data, x, y, tradeTooltip, priceTooltip);
+//
+function zoomed() {
+  var rescaleX = d3.event.transform.rescaleX(x);
+  var rescaleY = d3.event.transform.rescaleY(y);
+  xGroup.call(xAxis.scale(rescaleX));
+  yGroup.call(yAxis.scale(rescaleY));
+  openAreaPath.attr("d", openArea.x(function (d) {
+    return rescaleX(time(d));
+  }));
+  openAreaPath.attr('d', openArea.y(function (d) {
+    return rescaleY(openPrice(d));
+  }));
+  closeAreaPath.attr("d", closeArea.x(function (d) {
+    return rescaleX(time(d));
+  }));
+  closeAreaPath.attr('d', closeArea.y(function (d) {
+    return rescaleY(closePrice(d));
+  }));
+
+  // TradeList.rescaleCircles(g, rescaleX, rescaleY);
+
+  var openXValue = rescaleX.invert(d3.selectAll('.open-circle')._groups[0][0].cx.animVal.value);
+  var closeXValue = rescaleX.invert(d3.selectAll('.close-circle')._groups[0][0].cx.animVal.value);
+  var openYValue = PriceDisplay.calculateYValue(openXValue, appleData, time);
+  var askYValue = PriceDisplay.calculateYValue(closeXValue, appleData, time);
+  PriceDisplay.updateCircles(openCircle, openXValue, openPrice(openYValue), rescaleX, rescaleY);
+  PriceDisplay.updateCircles(closeCircle, closeXValue, closePrice(askYValue), rescaleX, rescaleY);
+  xScale = rescaleX;
+  yScale = rescaleY;
+}
+
+function mousemove() {
+  toolTip.style('display', null);
+
+  var xValue = xScale.invert(d3.mouse(this)[0]);
+  var yValue = PriceDisplay.calculateYValue(xValue, appleData, time);
+
+  PriceDisplay.updateCircles(openCircle, xValue, openPrice(yValue), xScale, yScale);
+  PriceDisplay.updateCircles(closeCircle, xValue, closePrice(yValue), xScale, yScale);
+
+  toolTip.html('Open Price: $' + openPrice(yValue) + '<br>\n    Close Price: $' + closePrice(yValue)).style('left', d3.event.pageX + 5 + 'px').style('top', d3.event.pageY - 28 + 'px');
+}
+
+// TradeList.createToggleButton(svg, totalWidth, totalHeight);
 
 /***/ })
 /******/ ]);

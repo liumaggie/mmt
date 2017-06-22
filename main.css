@@ -18,8 +18,8 @@
   height: 30px;
 }
 
-.ask-circle,
-.bid-circle {
+.open-circle,
+.close-circle {
   fill: white;
   border: 100px solid black;
 }
