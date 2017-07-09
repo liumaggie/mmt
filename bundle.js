@@ -17053,7 +17053,7 @@ $('button').click(function (e) {
   }).curve(d3.curveStep);
 
   x.domain(d3.extent(currData, time));
-  y.domain([d3.min(currData, openPrice) - 0.4, d3.max(currData, openPrice)]);
+  y.domain([d3.min(currData, openPrice) - 5, d3.max(currData, openPrice) + 1]);
 
   var openAreaPath = g.append('path').attr("fill", "none").attr("stroke", "#F28F20").attr("stroke-width", 1.5).attr('clip-path', 'url(#clip)').attr('class', 'askArea').on('mousemove', mousemove).on('mouseout', function () {
     return toolTip.style('display', 'none');

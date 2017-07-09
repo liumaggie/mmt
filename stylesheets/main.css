@@ -31,7 +31,6 @@ button:hover {
   color: #000;
   background-color: #fff;
   border: 1px solid #000;
-  /*opacity: 0.8;*/
   transition-delay: 0.1s;
   width: 100px;
   pointer-events: none;
