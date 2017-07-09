@@ -1,3 +1,29 @@
+body {
+  font-family: 'Lato', sans-serif;
+}
+
+h1 {
+  font-size: 30px;
+  padding: 20px;
+}
+
+h1, section, figure {
+  text-align: center;
+}
+
+button {
+  color: #fff;
+  background-color: #77B3FB;
+  border-radius: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  position: relative;
+}
+
+button:hover {
+  background-color: #D2D2D2;
+}
+
 .tooltip {
   position: absolute;
   font-family: sans-serif;
