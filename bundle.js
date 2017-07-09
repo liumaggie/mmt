@@ -17082,11 +17082,11 @@ $('button').click(function (e) {
 
   var legend = g.append('g');
 
-  legend.append('rect').attr("x", graphWidth - 100).attr("y", graphHeight - 30).attr("width", 10).attr("height", 10).style("fill", '#F28F20');
+  legend.append('rect').attr("x", graphWidth - 100).attr("y", graphHeight - 30).attr("width", 10).attr("height", 10).style("fill", '#2072B2');
 
   legend.append('text').attr("x", graphWidth - 80).attr("y", graphHeight - 38).text("Open Price");
 
-  legend.append('rect').attr("x", graphWidth - 100).attr("y", graphHeight - 48).attr("width", 10).attr("height", 10).style("fill", '#2072B2');
+  legend.append('rect').attr("x", graphWidth - 100).attr("y", graphHeight - 48).attr("width", 10).attr("height", 10).style("fill", '#F28F20');
 
   legend.append('text').attr("x", graphWidth - 80).attr("y", graphHeight - 20).text("Close Price");
 
