@@ -8,7 +8,7 @@ const totalHeight = 620;
 const margin = {top: 30, right: 30, bottom: 50, left: 60};
 const graphWidth = totalWidth - margin.right - margin.left;
 const graphHeight = totalHeight - margin.top - margin.bottom;
-const currData = appleData;
+const currData = appleData.reverse();
 let xScale, yScale;
 
 const svg = d3.select('figure').append('svg')
@@ -50,15 +50,15 @@ const xAxis = d3.axisBottom(x);
 const yAxis = d3.axisLeft(y);
 
 const openArea = d3.line()
-                  // .curve(d3.curveStepAfter)
                   .x((d) => x(time(d)))
-                  .y((d) => y(openPrice(d)));
+                  .y((d) => y(openPrice(d)))
+                  .curve(d3.curveStep)
                   // .y0(0);
 
 const closeArea = d3.line()
-                  // .curve(d3.curveStepAfter)
                   .x((d) => x(time(d)))
-                  .y((d) => y(closePrice(d)));
+                  .y((d) => y(closePrice(d)))
+                  .curve(d3.curveStep)
                   // .y0(graphHeight);
 
 x.domain(d3.extent(currData, time));
@@ -82,14 +82,6 @@ const closeAreaPath = g.append('path')
   .on('mousemove', mousemove)
   .on('mouseout', () => toolTip.style('display', 'none'));
 
-// const tradeTooltip = d3.select('body').append('div')
-//   .attr('class', 'tooltip trade-tooltip')
-//   .style('display', 'none');
-//
-// const priceTooltip = d3.select('body').append('div')
-//   .attr('class', 'tooltip price-tooltip')
-//   .style('display', 'none');
-//
 
 const toolTip = d3.select('body').append('div')
   .attr('class', 'tooltip')
@@ -121,9 +113,7 @@ g.append("clipPath")
 openAreaPath.datum(currData);
 closeAreaPath.datum(currData);
 view.call(zoom.transform, d3.zoomIdentity);
-//
-// TradeList.createTradeCircles(g, data, x, y, tradeTooltip, priceTooltip);
-//
+
 function zoomed() {
   const rescaleX = d3.event.transform.rescaleX(x);
   const rescaleY = d3.event.transform.rescaleY(y);
@@ -134,23 +124,23 @@ function zoomed() {
   closeAreaPath.attr("d", closeArea.x(function(d) { return rescaleX(time(d)); }));
   closeAreaPath.attr('d', closeArea.y(function(d) { return rescaleY(closePrice(d)); }));
 
-  // TradeList.rescaleCircles(g, rescaleX, rescaleY);
-
   const openXValue = rescaleX.invert(d3.selectAll('.open-circle')._groups[0][0].cx.animVal.value);
   const closeXValue = rescaleX.invert(d3.selectAll('.close-circle')._groups[0][0].cx.animVal.value);
-  const openYValue = PriceDisplay.calculateYValue(openXValue, appleData, time);
-  const askYValue = PriceDisplay.calculateYValue(closeXValue, appleData, time);
+
+  const openYValue = PriceDisplay.calculateYValue(openXValue, currData, time);
+  const closeYValue = PriceDisplay.calculateYValue(closeXValue, currData, time);
   PriceDisplay.updateCircles(openCircle, openXValue, openPrice(openYValue), rescaleX, rescaleY);
-  PriceDisplay.updateCircles(closeCircle, closeXValue, closePrice(askYValue), rescaleX, rescaleY);
+  PriceDisplay.updateCircles(closeCircle, closeXValue, closePrice(closeYValue), rescaleX, rescaleY);
   xScale = rescaleX;
   yScale = rescaleY;
+
 }
 
 function mousemove() {
   toolTip.style('display', null);
 
   const xValue = xScale.invert(d3.mouse(this)[0]);
-  const yValue = PriceDisplay.calculateYValue(xValue, appleData, time);
+  const yValue = PriceDisplay.calculateYValue(xValue, currData, time);
 
   PriceDisplay.updateCircles(openCircle, xValue, openPrice(yValue), xScale, yScale);
   PriceDisplay.updateCircles(closeCircle, xValue, closePrice(yValue), xScale, yScale);

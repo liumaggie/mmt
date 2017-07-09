@@ -21,5 +21,6 @@ exports.calculateYValue = (xValue, data, time) => {
   const d0 = data[idx-1];
   const d1 = data[idx];
   const yValue = xValue - time(d0) > time(d1) - xValue ? d1 : d0;
+
   return yValue;
 };
