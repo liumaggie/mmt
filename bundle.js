@@ -17055,11 +17055,11 @@ $('button').click(function (e) {
   x.domain(d3.extent(currData, time));
   y.domain([d3.min(currData, openPrice) - 0.4, d3.max(currData, openPrice)]);
 
-  var openAreaPath = g.append('path').attr("fill", "none").attr("stroke", "steelblue").attr("stroke-width", 1.5).attr('clip-path', 'url(#clip)').attr('class', 'askArea').on('mousemove', mousemove).on('mouseout', function () {
+  var openAreaPath = g.append('path').attr("fill", "none").attr("stroke", "#F28F20").attr("stroke-width", 1.5).attr('clip-path', 'url(#clip)').attr('class', 'askArea').on('mousemove', mousemove).on('mouseout', function () {
     return toolTip.style('display', 'none');
   });
 
-  var closeAreaPath = g.append('path').attr("fill", "none").attr("stroke", "green").attr("stroke-width", 1.5).attr('clip-path', 'url(#clip)').on('mousemove', mousemove).on('mouseout', function () {
+  var closeAreaPath = g.append('path').attr("fill", "none").attr("stroke", "#2072B2").attr("stroke-width", 1.5).attr('clip-path', 'url(#clip)').on('mousemove', mousemove).on('mouseout', function () {
     return toolTip.style('display', 'none');
   });
 
