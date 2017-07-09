@@ -36,24 +36,10 @@ button:hover {
   pointer-events: none;
 }
 
-.trade-tooltip {
-  height: 60px;
-}
-
 .price-tooltip {
   height: 30px;
 }
 
-.open-circle,
-.close-circle {
-  fill: black;
-  border: 100px solid black;
-}
-
-.btn {
-  fill: #ddd;
-  stroke: black;
-  font-size: 12px;
-  font-family: sans-serif;
-  cursor: pointer;
+.legend {
+  width: 100px;
 }
